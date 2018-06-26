@@ -255,7 +255,7 @@ class Game(Object):
             return False
 
     def get_tables(self):
-        return self.tables
+        return self.tables.values()
 
     def add_player_to_table(self, player_id, table_id):
         self.tables[table_id].players.add(player_id)

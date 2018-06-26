@@ -51,6 +51,8 @@ def do_tick():
     t0 = time()
     game = get_game()
     t1 = time()
+    if not game.is_running():
+        return "Game not running", 202
     game.tick()
     t2 = time()
     msg = 'entire tick {:.2f}, get_game: {:.2f}'.format(t2-t1, t1-t0)
@@ -373,6 +375,7 @@ def generate_table_data(table):
 
 @require_api_key
 def get_tables():
+    game = get_game()
     tables = game.get_tables()
     return [ dict(id=t.id,name=t.name) for t in tables ], 200
 
