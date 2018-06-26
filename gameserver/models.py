@@ -226,6 +226,7 @@ class Policy(Node):
 
 class Player(Node):
 
+    max_outflow = 0.0
     unclaimed_budget = 0.0
     last_budget_claim = 0.0
     token = None
