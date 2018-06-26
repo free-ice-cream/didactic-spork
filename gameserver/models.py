@@ -162,7 +162,7 @@ class Node(Base):
     def do_leak(self):
         leak = self.get_leak()
         if self.balance and leak:
-            self.wallet.leak(leak)
+            self.wallet -= min(leak, self.balance)
 
     @property
     def wallet_owner_map(self):

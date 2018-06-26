@@ -305,6 +305,72 @@ class CoreGameTests(ControllerTestCase):
 
         self.assertEqual(n1.balance, 15.0)
 
+    def testNodeLeak2(self):
+        n1 = self.game.add_policy('Policy 1', leak=2.0)
+        p1 = self.game.create_player('Matt')
+        p2 = self.game.create_player('Simon')
+        n1.wallet = Wallet([(p1.id, 5.0),
+                            (p2.id, 10.0),])
+
+        self.assertEqual(n1.balance, 15.0)
+        n1.do_leak()
+        self.assertAlmostEqual(n1.balance, 13.0, 5)
+        n1.do_leak()
+        self.assertEqual(n1.balance, 11.0)
+
+    def testNodeLeak0(self):
+        n1 = self.game.add_policy('Policy 1', leak=0.0)
+        p1 = self.game.create_player('Matt')
+        n1.wallet = Wallet([(p1.id, 15.0)])
+
+        self.assertEqual(n1.balance, 15.0)
+        n1.do_leak()
+        self.assertEqual(n1.balance, 15.0)
+        n1.do_leak()
+        self.assertEqual(n1.balance, 15.0)
+
+    def testNodeLeak5(self):
+        n1 = self.game.add_policy('Policy 1', leak=5.0)
+        p1 = self.game.create_player('Matt')
+        p2 = self.game.create_player('Simon')
+        n1.wallet = Wallet([(p1.id, 5.0),
+                            (p2.id, 10.0),])
+
+        self.assertEqual(n1.balance, 15.0)
+        n1.do_leak()
+        self.assertAlmostEqual(n1.balance, 10.0, 5)
+        n1.do_leak()
+        self.assertAlmostEqual(n1.balance, 5.0, 5)
+
+        # Check the individual wallets
+        d = n1.wallet.todict()
+        self.assertAlmostEqual(d[p1.id], 1.66666, 3)
+        self.assertAlmostEqual(d[p2.id], 3.33333, 3)
+
+    def testNodeLeakNegative20(self):
+        n1 = self.game.add_policy('Policy 1', leak=0.2)
+        g1 = self.game.add_goal('Goal 1', leak=0.2)
+        p1 = self.game.create_player('Matt')
+        p2 = self.game.create_player('Simon')
+        g1.wallet = Wallet([(p1.id, 5.0),
+                            (p2.id, 10.0),])
+
+        # add a negative impact edge
+        l1 = self.game.add_link(n1, g1, -0.5)
+
+        self.assertEqual(g1.balance, 15.0)
+        g1.do_leak()
+        self.assertAlmostEqual(g1.balance, 4.5)
+        g1.do_leak()
+        self.assertAlmostEqual(g1.balance, 1.35)
+
+        # Check the individual wallets
+        d = g1.wallet.todict()
+        self.assertAlmostEqual(d[p1.id], 0.45, 5)
+        self.assertAlmostEqual(d[p2.id], 0.9, 5)
+###
+
+    @unittest.skip
     def testNodeLeak100(self):
         n1 = self.game.add_policy('Policy 1', leak=1.0)
         p1 = self.game.create_player('Matt')
@@ -318,6 +384,7 @@ class CoreGameTests(ControllerTestCase):
         n1.do_leak()
         self.assertEqual(n1.balance, 0.0)
 
+    @unittest.skip
     def testNodeLeak0(self):
         n1 = self.game.add_policy('Policy 1', leak=0.0)
         p1 = self.game.create_player('Matt')
@@ -329,6 +396,7 @@ class CoreGameTests(ControllerTestCase):
         n1.do_leak()
         self.assertEqual(n1.balance, 15.0)
 
+    @unittest.skip
     def testNodeLeak20(self):
         n1 = self.game.add_policy('Policy 1', leak=0.2)
         p1 = self.game.create_player('Matt')
@@ -347,6 +415,7 @@ class CoreGameTests(ControllerTestCase):
         self.assertAlmostEqual(d[p1.id], 3.2, 5)
         self.assertAlmostEqual(d[p2.id], 6.4, 5)
 
+    @unittest.skip
     def testNodeLeakNegative20(self):
         n1 = self.game.add_policy('Policy 1', leak=0.2)
         g1 = self.game.add_goal('Goal 1', leak=0.2)
@@ -717,8 +786,57 @@ class CoreGameTests(ControllerTestCase):
 
         self.game.do_leak()
         self.assertEqual(n1.balance, 100.0)
+        self.assertAlmostEqual(n2.balance, 99.0, 5)
+
+    def testGameLeak50(self):
+        n1 = self.game.add_policy('Policy 1', leak=0.5)
+        n2 = self.game.add_policy('Policy 2', leak=0.2)
+        p1 = self.game.create_player('Matt')
+        n1.wallet = Wallet([(p1.id, 100.0)])
+        n2.wallet = Wallet([(p1.id, 100.0)])
+
+        self.assertEqual(n1.balance, 100.0)
+        self.assertEqual(n2.balance, 100.0)
+
+        self.game.do_leak()
+        self.assertAlmostEqual(n1.balance, 50.0)
+        self.assertAlmostEqual(n2.balance, 80.0)
+
+        self.game.do_leak()
+        self.assertAlmostEqual(n1.balance, 25.0)
+        self.assertAlmostEqual(n2.balance, 64.0)
+
+    @unittest.skip
+    def testGameLeak100(self):
+        n1 = self.game.add_policy('Policy 1', leak=1.0)
+        n2 = self.game.add_policy('Policy 2', leak=1.0)
+        p1 = self.game.create_player('Matt')
+        n1.wallet = Wallet([(p1.id, 100.0)])
+        n2.wallet = Wallet([(p1.id, 100.0)])
+
+        self.assertEqual(n1.balance, 100.0)
+        self.assertEqual(n2.balance, 100.0)
+
+        self.game.do_leak()
+        self.assertEqual(n1.balance, 0.0)
         self.assertEqual(n2.balance, 0.0)
 
+    @unittest.skip
+    def testGameLeak0_100(self):
+        n1 = self.game.add_policy('Policy 1', leak=0.0)
+        n2 = self.game.add_policy('Policy 2', leak=1.0)
+        p1 = self.game.create_player('Matt')
+        n1.wallet = Wallet([(p1.id, 100.0)])
+        n2.wallet = Wallet([(p1.id, 100.0)])
+
+        self.assertEqual(n1.balance, 100.0)
+        self.assertEqual(n2.balance, 100.0)
+
+        self.game.do_leak()
+        self.assertEqual(n1.balance, 100.0)
+        self.assertEqual(n2.balance, 0.0)
+
+    @unittest.skip
     def testGameLeak50(self):
         n1 = self.game.add_policy('Policy 1', leak=0.5)
         n2 = self.game.add_policy('Policy 2', leak=0.2)
@@ -1148,6 +1266,31 @@ class CoreGameTests(ControllerTestCase):
         self.assertEqual(g1.balance, 50)
         self.assertEqual(g2.balance, 100)
 
+    def testMoreComplexPlayerCoinsNetworkWithFullTick(self):
+        p1 = self.game.create_player('Matt', balance=5000)
+        po1 = self.game.add_policy('Arms Embargo', leak=0.1)
+        po2 = self.game.add_policy('Pollution control', leak=0.1)
+        self.game.set_policy_funding_for_player(p1, [(po1.id, 10.0), (po2.id, 15.0)])
+
+        g1 = self.game.add_goal('World Peace', leak=0.5)
+        g2 = self.game.add_goal('Clean Water', leak=0.5)
+        l3 = self.game.add_link(po1, g1, 5.0)
+        l4 = self.game.add_link(po2, g2, 9.0)
+
+        self.assertEqual(p1.balance, 5000)
+        self.assertEqual(po1.balance, 0)
+
+        for x in range(100):
+            self.game.tick()
+
+        self.assertEqual(p1.balance, 2500)
+        self.assertAlmostEqual(po1.balance, 490, 2)
+        self.assertAlmostEqual(po2.balance, 60, 2)
+
+        self.assertEqual(g1.balance, 10.0)
+        self.assertEqual(g2.balance, 18.0)
+
+    @unittest.skip
     def testMoreComplexPlayerCoinsNetworkWithFullTick(self):
         p1 = self.game.create_player('Matt', balance=5000)
         po1 = self.game.add_policy('Arms Embargo', leak=0.1)
