@@ -365,11 +365,15 @@ class Game(Object):
 
     def get_network(self, players=None):
 
-        def node_recurse_generator(node):
+        def node_recurse_generator(node, seen=None):
+            if seen == None:
+                seen = set()
             yield node
             for n in node.children:
-                for rn in node_recurse_generator(n):
-                    yield rn 
+                for rn in node_recurse_generator(n, seen):
+                    if rn not in seen:
+                        seen.add(node)
+                        yield rn 
 
         if not players:
             goals = self.get_goals()
