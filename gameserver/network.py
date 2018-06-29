@@ -45,9 +45,9 @@ class Network(Object):
                 if amount > 0:
                     player.balance -= amount
                     policy = self.policies[policy_id]
-                    if not hasattr(policy, 'incoming'):
-                        policy.incoming = Wallet()
-                    policy.incoming &= Wallet([(player.id, amount)])
+                    if not hasattr(policy, '_v_incoming'):
+                        policy._v_incoming = Wallet()
+                    policy._v_incoming &= Wallet([(player.id, amount)])
 
     def propagate(self):
 
@@ -56,17 +56,17 @@ class Network(Object):
             previous_balance = policy.balance
 
             # funds coming in from players
-            if hasattr(policy, 'incoming'):
-                policy.wallet &= policy.incoming
-                del policy.incoming
+            if hasattr(policy, '_v_incoming'):
+                policy.wallet &= policy._v_incoming
+                del policy._v_incoming
 
             # funds coming in from other nodes
             edges = policy.higher_edges
             for edge in edges:
-                if getattr(edge, 'wallet', None):
-                    policy.wallet &= edge.wallet
+                if getattr(edge, '_v_wallet', None):
+                    policy.wallet &= edge._v_wallet
                     # delete the wallet after we get from it
-                    edge.wallet = None 
+                    del edge._v_wallet
 
             new_balance = policy.balance
             max_level = policy.max_level or 0
@@ -111,6 +111,6 @@ class Network(Object):
                     factored_amount = policy.balance
 
                 # create a wallet on the edge and transfer to it
-                edge.wallet = Wallet()
-                policy.wallet.transfer(edge.wallet, factored_amount)
+                edge._v_wallet = Wallet()
+                policy.wallet.transfer(edge._v_wallet, factored_amount)
 
