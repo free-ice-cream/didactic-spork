@@ -351,7 +351,7 @@ def generate_table_data(table):
 
     for n in network['policies']:
         data = node_to_dict2(n)
-        data['group'] = 0
+        data['group'] = 9
         nodes[n.id] = data
         links.extend([edge_to_dict(e) for e in n.lower_edges])
 
