@@ -62,6 +62,7 @@ def do_tick():
 
 @require_api_key
 def clear_players():
+    game = get_game()
     game.clear_players()
     return None, 200
 
@@ -350,7 +351,7 @@ def generate_table_data(table):
 
     for n in network['policies']:
         data = node_to_dict2(n)
-        data['group'] = 9
+        data['group'] = 0
         nodes[n.id] = data
         links.extend([edge_to_dict(e) for e in n.lower_edges])
 
