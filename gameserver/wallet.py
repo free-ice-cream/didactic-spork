@@ -2,8 +2,9 @@ from struct import pack, unpack, unpack_from, calcsize
 import unittest
 from uuid import uuid4, UUID
 from types import IntType, FloatType
+from persistent import Persistent
 
-class Wallet:
+class Wallet(Persistent):
 
     HDR_FMT = "f"
     MSG_FMT = "16sf"
@@ -27,6 +28,7 @@ class Wallet:
                 del self._entries[player_id]
             except KeyError:
                 pass
+        self._p_changed = 1
 
 
     def add(self, player_id, amount):
@@ -61,6 +63,8 @@ class Wallet:
             k,v = unpack(fmt, data[i:i+msg_len])
             self._entries[k] = v
 
+        self._p_changed = 1
+            
     def __getitem__(self, index):
         return self._entries[index]
 
@@ -125,6 +129,9 @@ class Wallet:
         dest._total = _nt
         dest._entries = _ne
 
+        self._p_changed = 1
+        dest._p_changed = 1
+        
     def leak(self, factor):
         _e = self._entries
         for p in _e:
@@ -132,6 +139,7 @@ class Wallet:
             _e[p] -= t
             self._total -= t
 
+        self._p_changed = 1
 
     def __mul__(self, other):
         if type(other) not in [IntType, FloatType]:
